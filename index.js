@@ -15,6 +15,8 @@ const UserModel = require('./models/Users');
 const ClassifiedsModel = require('./models/Classifieds');
 const EvaluationModel = require('./models/Evaluation');
 const NotificationModel = require('./models/Notification');
+const AboutModel = require('./models/About');
+const TocModel = require('./models/Toc');
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -447,6 +449,66 @@ app.get('/vehicle/:id', async (req, res) => {
     try {
         const vehicle = await VehiclesModel.findOne({_id: req.params.id})
         return res.json({data: vehicle})
+    } catch (err) {
+        console.log(err)
+        res.json({ status: "error", error: "Invalid Token"})
+    }
+});
+
+app.put('/edit/about/:id', async (req, res) => {
+    const update = req.body.x
+    try {
+        const x = await AboutModel.findOneAndUpdate({_id: req.params.id}, update, {new: true})
+        res.send({status: "200"})
+    } catch(err) {
+        res.send({status: "500", error: err})
+    };
+});
+
+app.get('/about', cors(), async (req, res) => {
+    try {
+        const about = await AboutModel.find()
+        return res.json({data: about})
+    } catch (err) {
+        console.log(err)
+        res.json({ status: "error", error: "Invalid Token"})
+    }
+});
+
+app.get('/about/:id', async (req, res) => {
+    try {
+        const about = await AboutModel.findOne({_id: req.params.id})
+        return res.json({data: about})
+    } catch (err) {
+        console.log(err)
+        res.json({ status: "error", error: "Invalid Token"})
+    }
+});
+
+app.put('/edit/toc/:id', async (req, res) => {
+    const update = req.body.x
+    try {
+        const x = await TocModel.findOneAndUpdate({_id: req.params.id}, update, {new: true})
+        res.send({status: "200"})
+    } catch(err) {
+        res.send({status: "500", error: err})
+    };
+});
+
+app.get('/toc', cors(), async (req, res) => {
+    try {
+        const toc = await TocModel.find()
+        return res.json({data: toc})
+    } catch (err) {
+        console.log(err)
+        res.json({ status: "error", error: "Invalid Token"})
+    }
+});
+
+app.get('/toc/:id', async (req, res) => {
+    try {
+        const toc = await TocModel.findOne({_id: req.params.id})
+        return res.json({data: toc})
     } catch (err) {
         console.log(err)
         res.json({ status: "error", error: "Invalid Token"})
