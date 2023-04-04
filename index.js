@@ -253,9 +253,9 @@ app.put('/edit/negotiation/:id', async (req, res) => {
 });
 
 async function PostNegotiation(id, duration, start, username, vehicleId){
-    if ((new Date(start).getTime() + 60000 * parseInt(duration)) <= new Date(new Date().setHours(new Date().getHours() + 4)).getTime()) {
+    if ((new Date(start).getTime() + 60000 * parseInt(duration)) <= new Date(new Date().setHours(new Date().getHours())).getTime()) {
         console.log(new Date(new Date(start).getTime() + 60000 * parseInt(duration)))
-        console.log(new Date(new Date(new Date().setHours(new Date().getHours() + 4))))
+        console.log(new Date(new Date(new Date().setHours(new Date().getHours()))))
         await NegotiationsModel.findOneAndUpdate({_id: id}, {Status: "Post-Negotiation"}, {new: true})
         await VehiclesModel.findOneAndUpdate({_id: vehicleId}, {Auction_Winner: username, Status: 'Post-Negotiation'}, {new: true})
         const user = await UserModel.findOne({username: username})
