@@ -416,6 +416,15 @@ async function uploadFiles(req, res) {
     res.json({ message: "Successfully uploaded files" }) : res.json( {message: "Something went wrong"})
 }
 
+app.get('/delete/auction/:id', async (req, res) => {
+    try {
+         await AuctionsModel.deleteOne({_id: req.params.id})
+         console.log("HER")
+        res.send({status: "200", response: "Deleted"})
+    } catch(err) {
+        res.send({status: "500", error: err})
+    };
+});
 
 app.post('/add/vehicle', async (req, res) => {
     const vehicle = new VehiclesModel(req.body.x);
