@@ -217,4 +217,13 @@ const activate = (req, res, next) => {
     });
 };
 
-module.exports = { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword };
+const deleteAccount = async (req, res, next) => {
+    try {
+        await UserModel.deleteOne({email: req.params.email})
+        return res.send({status: "200", response: "Deleted"})
+    } catch(err) {
+        return res.send({status: "500", error: err})
+    };
+};
+ 
+module.exports = { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount };

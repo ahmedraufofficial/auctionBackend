@@ -26,7 +26,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword } = require('./controllers/auth.js');
+const { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount } = require('./controllers/auth.js');
 const { pdfier } = require('./controllers/pdfier.js'); 
 const { userNotification, usersNotificationApi, userNotificationApi, userNotificationId, userNotificationUsername } = require('./controllers/notifications.js')
 
@@ -86,7 +86,7 @@ app.get('/notification/all/:id', async (req, res) => {
 app.post("/upload_classified_images", upload.array("files",8), uploadClassifiedFiles);
 async function uploadClassifiedFiles(req, res) {
     const update = {Images: req.files.map((file) => file.filename)}
-    //await ClassifiedsModel.findOneAndUpdate({_id: req.body.id}, update, {new: true})
+    await ClassifiedsModel.findOneAndUpdate({_id: req.body.id}, update, {new: true})
     req.files?.length > 0 ?
     res.json({ message: update }) : res.json( {message: "Something went wrong"})
 }
@@ -581,6 +581,7 @@ app.get('/accounts', accounts);
 app.post('/forgot-password', generateOtp);
 app.post('/reset-password', resetPassword);
 app.post('/accounts/activate', activate);
+app.get('/accounts/delete/:email', deleteAccount);
 app.post('/broadcast', usersNotificationApi);
 app.post('/p2p', userNotificationApi);
 app.post('/deviceid', userNotificationId);
