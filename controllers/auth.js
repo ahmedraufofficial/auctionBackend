@@ -37,7 +37,7 @@ const signup = (req, res, next) => {
                             from: 'llc.carology@gmail.com',
                             to: req.body.email,
                             subject: 'Confirm your account',
-                            text: 'Thank you for signing up. Click on this link to use basic features of the app while we approve your request to advanced user.'
+                            text: 'Thank you for signing up. Once verified by our admin, your account will be activated and you will be notified'
                           };
                     
                         transporter.sendMail(mailOptions, function(error, info){
@@ -207,7 +207,22 @@ const activate = (req, res, next) => {
             return res.status(404).json({message: "user not found"});
         } else {
             const update = await UserModel.findOneAndUpdate({_id: req.body.id}, {status: "Active"}, {new: true})
+
             if (update) {
+                var mailOptions = {
+                    from: 'llc.carology@gmail.com',
+                    to: update.email,
+                    subject: 'Confirm your account',
+                    text: 'Thank you for signing up. Your account has been activated.'
+                  };
+            
+                transporter.sendMail(mailOptions, function(error, info){
+                    if (error) {
+                      console.log(error);
+                    } else {
+                      console.log('Email sent: ' + info.response);
+                    }
+                });
                 return res.send({status: "200"})
             }
         };
