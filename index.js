@@ -86,7 +86,12 @@ app.get('/notification/all/:id', async (req, res) => {
 app.post("/upload_classified_images", upload.array("files",8), uploadClassifiedFiles);
 async function uploadClassifiedFiles(req, res) {
     const update = {Images: req.files.map((file) => file.filename)}
-    await ClassifiedsModel.findOneAndUpdate({_id: req.body.id}, update, {new: true})
+    try {
+        await ClassifiedsModel.findOneAndUpdate({_id: req.body.id}, update, {new: true})
+    } catch (err) {
+        console.log("Not classified")
+        await EvaluationModel.findOneAndUpdate({_id: req.body.id}, update, {new: true})
+    }
     req.files?.length > 0 ?
     res.json({ message: update }) : res.json( {message: "Something went wrong"})
 }
