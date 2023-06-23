@@ -26,7 +26,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount } = require('./controllers/auth.js');
+const { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate } = require('./controllers/auth.js');
 const { pdfier } = require('./controllers/pdfier.js'); 
 const { userNotification, usersNotificationApi, userNotificationApi, userNotificationId, userNotificationUsername } = require('./controllers/notifications.js')
 
@@ -581,6 +581,7 @@ app.get('/accounts', accounts);
 app.post('/forgot-password', generateOtp);
 app.post('/reset-password', resetPassword);
 app.post('/accounts/activate', activate);
+app.post('/accounts/deactivate', deactivate);
 app.get('/accounts/delete/:email', deleteAccount);
 app.post('/broadcast', usersNotificationApi);
 app.post('/p2p', userNotificationApi);

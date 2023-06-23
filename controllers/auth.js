@@ -217,6 +217,23 @@ const activate = (req, res, next) => {
     });
 };
 
+const deactivate = (req, res, next) => {
+    UserModel.findOne({_id: req.body.id})
+    .then(async user => {
+        if (!user) {
+            return res.status(404).json({message: "user not found"});
+        } else {
+            const update = await UserModel.findOneAndUpdate({_id: req.body.id}, {status: "Inactive"}, {new: true})
+            if (update) {
+                return res.send({status: "200"})
+            }
+        };
+    })
+    .catch(err => {
+        console.log('error', err);
+    });
+};
+
 const deleteAccount = async (req, res, next) => {
     try {
         await UserModel.deleteOne({email: req.params.email})
@@ -226,4 +243,4 @@ const deleteAccount = async (req, res, next) => {
     };
 };
  
-module.exports = { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount };
+module.exports = { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate };
