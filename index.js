@@ -115,7 +115,7 @@ app.post('/add/evaluation', async (req, res) => {
     const evaluation = new EvaluationModel(req.body.values);
     try {
         await evaluation.save();
-        /* UserModel.findOne({username: req.body.values.username}).then(async user => {
+        UserModel.findOne({username: req.body.values.username}).then(async user => {
             if (user) {
                 var mailOptions = {
                     from: 'llc.carology@gmail.com',
@@ -134,7 +134,7 @@ app.post('/add/evaluation', async (req, res) => {
         })
         .catch(err => {
             console.log('error', err);
-        }); */
+        });
         res.send({status: "200"})
     } catch(err) {
         res.send({status: "500", error: err})
