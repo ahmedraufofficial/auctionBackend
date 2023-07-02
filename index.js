@@ -47,9 +47,11 @@ const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
         if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg") {
+            console.log("Filetype requirement met")
             cb(null, true);
         } else {
             cb(null, false);
+            console.log("Filetype requirement not met")
             //return cb(new Error('File type not accepted (.png, .jpg, .jpeg)'));
         }
     }
