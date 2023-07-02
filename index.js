@@ -50,8 +50,8 @@ const upload = multer({
             console.log("Filetype requirement met")
             cb(null, true);
         } else {
-            cb(null, false);
             console.log("Filetype requirement not met")
+            cb(null, false);
             //return cb(new Error('File type not accepted (.png, .jpg, .jpeg)'));
         }
     }
