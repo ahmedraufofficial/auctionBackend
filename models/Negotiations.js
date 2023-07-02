@@ -27,6 +27,8 @@ const NegotiationsSchema = new mongoose.Schema({
     Status: String,
     Bids: Array,
     Images: Array,
+    Allow_Auction_Sniping: String,
+    Incremental_Time: String,
 });
 
 const Negotiation = mongoose.model("negotiations", NegotiationsSchema);

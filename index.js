@@ -86,6 +86,7 @@ app.get('/notification/all/:id', async (req, res) => {
 app.post("/upload_classified_images", upload.array("files",8), uploadClassifiedFiles);
 async function uploadClassifiedFiles(req, res) {
     const update = {Images: req.files.map((file) => file.filename)}
+    console.log(update)
     try {
         await ClassifiedsModel.findOneAndUpdate({_id: req.body.id}, update, {new: true})
     } catch (err) {
@@ -228,7 +229,9 @@ app.get('/prenegotiations', async (req, res) => {
                 Vehicle_Title: auction?.Vehicle_Title,
                 Status: auction?.Status,
                 Bids: auction?.Bids,
-                Images: auction?.Images
+                Images: auction?.Images,
+                Allow_Auction_Sniping: auction?.Allow_Auction_Sniping,
+                Incremental_Time: auction?.Incremental_Time
             }
         if (auction?.Negotiation_Mode === "automatic") {
             values.Buy_Now_Price = auction?.Current_Bid;
@@ -247,10 +250,29 @@ app.get('/prenegotiations', async (req, res) => {
     return res.json({data: negotiations})
 })
 
+async function setIncrementalPriceNegotiation(negotiation){
+    if (JSON.parse(negotiation.Allow_Auction_Sniping)){
+        const initialTime = new Date(negotiation?.Negotiation_Start_Date).getTime() + 60000 * parseInt(negotiation?.Negotiation_Duration)
+        /* new Date().setHours(new Date().getHours() + 4) */
+        const currentTime = new Date().getTime();
+        const timeDiff = ((((initialTime - currentTime) / 1000) / 60) - 0.2).toString().split(".");
+        console.log(timeDiff)
+        if (parseInt(timeDiff[0]) === 0 && parseInt(timeDiff[1]) > 0) {
+            const duration = parseInt(negotiation?.Negotiation_Duration) + parseInt(negotiation?.Incremental_Time);
+            console.log(duration)
+            await NegotiationsModel.findOneAndUpdate({_id: negotiation?._id}, {
+                Negotiation_Duration: duration.toString(),
+            }, {new: true})
+        }
+    }
+}
+
+
 app.put('/edit/negotiation/:id', async (req, res) => {
     const update = req.body
     try {
         let negotiation = await NegotiationsModel.findOneAndUpdate({_id: req.params.id}, update, {new: true})
+        setIncrementalPriceNegotiation(negotiation);
         res.send({status: "200", response: negotiation})
     } catch(err) {
         res.send({status: "500", error: err})
@@ -259,10 +281,12 @@ app.put('/edit/negotiation/:id', async (req, res) => {
 
 async function PostNegotiation(id, duration, start, username, vehicleId){
     if ((new Date(start).getTime() + 60000 * parseInt(duration)) <= new Date(new Date().setHours(new Date().getHours())).getTime()) {
-        console.log(new Date(new Date(start).getTime() + 60000 * parseInt(duration)))
-        console.log(new Date(new Date(new Date().setHours(new Date().getHours()))))
+        /* console.log(new Date(new Date(start).getTime() + 60000 * parseInt(duration)))
+        console.log(new Date(new Date(new Date().setHours(new Date().getHours())))) */
         await NegotiationsModel.findOneAndUpdate({_id: id}, {Status: "Post-Negotiation"}, {new: true})
+        if (vehicleId) {
         await VehiclesModel.findOneAndUpdate({_id: vehicleId}, {Auction_Winner: username, Status: 'Post-Negotiation'}, {new: true})
+        }
         const user = await UserModel.findOne({username: username})
         if (user) {
             userNotification("Auction Won!", "A Vehicle has been added to your cart", user.Device_Id)
@@ -274,7 +298,7 @@ app.get('/negotiation/:id', async (req, res) => {
     try {
         let negotiation = await NegotiationsModel.findOne({_id: req.params.id});
         if (negotiation?.Buy_Now_Price && negotiation?.Status === "Pre-Negotiation") {
-            await PostNegotiation(negotiation._id, negotiation.Negotiation_Duration, negotiation.Negotiation_Start_Date, negotiation?.Bids.length > 0 ? negotiation?.Bids[negotiation?.Bids?.length - 1].user : null, negotiation.Vehicle_Id)
+            await PostNegotiation(negotiation._id, negotiation.Negotiation_Duration, negotiation.Negotiation_Start_Date, negotiation?.Bids.length > 0 ? negotiation?.Bids[negotiation?.Bids?.length - 1].user : null, negotiation?.Vehicle_Id)
         }
         res.send({status: "200", response: negotiation})
     } catch(err) {
@@ -333,9 +357,13 @@ async function autoBid(auctions){
         if (JSON.parse(auction?.Allow_Auto_Bidding) && auction?.Status === "Pre-Negotiation" &&
             (((new Date().getTime() - auction.Recent_Auto_Bid.getTime())/ 1000) / 60) > 2){
             if ((parseInt(auction?.Current_Bid) < parseInt(auction[auction?.Stop_Auto_Bidding_Condition]||"100000000"))){
+                const bidDetails = {user: 'Admin', type: "Auction", bid: (parseInt(auction?.Current_Bid) + parseInt(auction?.Set_Incremental_Price)).toString(), time: moment().format("HH:mm:ss"), date: moment().format("YYYY-MM-DD")}
+                let check = await AuctionsModel.findOne({_id: auction?._id});
+                check.Bids.push(bidDetails)
                 await AuctionsModel.findOneAndUpdate({_id: auction?._id}, {
                     Current_Bid: (parseInt(auction?.Current_Bid) + parseInt(auction?.Set_Incremental_Price)).toString(),
-                    Recent_Auto_Bid: new Date()
+                    Recent_Auto_Bid: new Date(),
+                    Bids: check.Bids
                 }, {new: true})
             } else {
                 console.log("First")
@@ -366,12 +394,15 @@ app.get('/auctions', async (req, res) => {
 
 async function setIncrementalPrice(auction){
     if (JSON.parse(auction.Allow_Auction_Sniping)){
+        console.log("Here")
         const initialTime = new Date(moment(auction?.Auction_Start_Date).format("YYYY-MM-DD")+" "+auction?.Auction_Start_Time+":00").getTime() + 60000 * parseInt(auction.Total_Bidding_Duration)
         /* new Date().setHours(new Date().getHours() + 4) */
         const currentTime = new Date().getTime();
         const timeDiff = ((((initialTime - currentTime) / 1000) / 60) - 0.2).toString().split(".");
+        console.log(timeDiff)
         if (parseInt(timeDiff[0]) === 0 && parseInt(timeDiff[1]) > 0) {
             const duration = parseInt(auction?.Total_Bidding_Duration) + parseInt(auction?.Incremental_Time);
+            console.log(duration)
             await AuctionsModel.findOneAndUpdate({_id: auction?._id}, {
                 Total_Bidding_Duration: duration.toString(),
             }, {new: true})
@@ -392,8 +423,11 @@ app.put('/edit/auction/:id', async (req, res) => {
     };
 });
 
-app.put('/editadmin/auction/:id', async (req, res) => {
+app.post('/editadmin/auction/:id', async (req, res) => {
     const update = req.body.x
+    if (req.body.x?.Allow_Auto_Bidding === 'true') {
+        update.Status = "Pre-Negotiation"
+    }
     try {
         const auction = await AuctionsModel.findOneAndUpdate({_id: req.params.id}, update, {new: true})
         res.send({status: "200", response: auction})
