@@ -168,6 +168,16 @@ app.put('/edit/classifieds/:id', async (req, res) => {
     };
 });
 
+app.delete('/classifieds/:id', async (req, res) => {
+    try {
+        const x = await ClassifiedsModel.deleteOne({_id: req.params.id});
+        res.send({status: "200"})
+    } catch(err) {
+        res.send({status: "500", error: err})
+    };
+});
+
+
 
 app.get('/email', async (req, res) => {
 
@@ -176,6 +186,27 @@ app.get('/email', async (req, res) => {
         to: 'arky99992@gmail.com',
         subject: 'Sending Email using Node.js',
         text: 'That was easy!'
+      };
+
+    await transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+    });
+    res.send({status: "200"})
+});
+
+app.post('/email/:email', async (req, res) => {
+    const userEmail = req.params.email
+    const message = req.body.message
+
+    var mailOptions = {
+        from: 'llc.carology@gmail.com',
+        to: userEmail,
+        subject: 'Auction Update',
+        text: message
       };
 
     await transporter.sendMail(mailOptions, function(error, info){
