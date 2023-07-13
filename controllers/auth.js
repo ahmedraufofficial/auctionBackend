@@ -13,20 +13,24 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const signup = (req, res, next) => {
-    UserModel.findOne({email: req.body.email})
+const signup = async (req, res, next) => {
+    const username = await UserModel.findOne({username: req.body.username.toLowerCase()})
+    if (username) {
+        return res.status(409).json({message: "username already exists"}); 
+    }
+    UserModel.findOne({email: req.body.email.toLowerCase()})
     .then(user => {
         if (user) {
             return res.status(409).json({message: "email already exists"});
-        } else if (req.body.email && req.body.password) {
+        } else if (req.body.email.toLowerCase() && req.body.password) {
             // password hash
             bcrypt.hash(req.body.password, 12, (err, passwordHash) => {
                 if (err) {
                     return res.status(500).json({message: "couldnt hash the password"}); 
                 } else if (passwordHash) {
                     const User = new UserModel({
-                        email: req.body.email,
-                        username: req.body.username,
+                        email: req.body.email.toLowerCase(),
+                        username: req.body.username.toLowerCase(),
                         number: req.body.number,
                         password: passwordHash,
                         status: 'Inactive'
@@ -71,7 +75,7 @@ const assignDeviceId = async(email, deviceId) => {
 }
 
 const login = (req, res, next) => {
-    UserModel.findOne({email: req.body.email}).then(user => {
+    UserModel.findOne({email: req.body.email.toLowerCase()}).then(user => {
         if (!user) {
             return res.status(404).json({message: "user not found"});
         } else {
@@ -80,16 +84,16 @@ const login = (req, res, next) => {
                     res.status(502).json({message: "error while checking user password"});
                 } else if (compareRes) { 
                     //assignDeviceId(req.body.email, req.body.deviceId);
-                    UserModel.findOneAndUpdate({ email: req.body.email}, {Device_Id: req.body.deviceId}, {new: true}).then((user => {
+                    UserModel.findOneAndUpdate({ email: req.body.email.toLowerCase() }, {Device_Id: req.body.deviceId}, {new: true}).then((user => {
                         if (user) {
                             console.log("Device Id = "+req.body.deviceId)
                         }
                     }))
                     userNotification("Signed In", "Notification Test", req.body.deviceId)
-                    const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' });
+                    const token = jwt.sign({ email: req.body.email.toLowerCase() }, 'secret', { expiresIn: '1h' });
                     res.status(200).json({message: "user logged in", "token": token, data: {
                         username: user.username,
-                        email: user.email,
+                        email: user.email.toLowerCase(),
                         token: token,
                         status: user.status
                     }});

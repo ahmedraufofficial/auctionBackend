@@ -272,8 +272,13 @@ app.get('/prenegotiations', async (req, res) => {
             }
         const negotiation = new NegotiationsModel(values);
         try {
-            await negotiation.save()
-            await AuctionsModel.findOneAndUpdate({_id: auction?._id}, {Status: "Negotiation"}, {new: true})
+            const check = await NegotiationsModel.findOne({"Auction_Id": auction?._id})
+            if (check) {
+                return res.json({failed: "Negotiation already exists"})
+            } else {
+                await negotiation.save()
+                await AuctionsModel.findOneAndUpdate({_id: auction?._id}, {Status: "Negotiation"}, {new: true})
+            }
         } catch (err) {
             return res.json({failed: err})
         }
