@@ -237,6 +237,7 @@ app.post('/add/negotiation', async (req, res) => {
 app.get('/negotiations', async (req, res) => {
     try {
         const negotiations = await NegotiationsModel.find()
+        console.log(negotiations)
         return res.json({data: negotiations})
     } catch (err) {
         console.log(err)
@@ -274,13 +275,15 @@ app.get('/prenegotiations', async (req, res) => {
         try {
             const check = await NegotiationsModel.findOne({"Auction_Id": auction?._id})
             if (check) {
-                return res.json({failed: "Negotiation already exists"})
+                const negotiations = await NegotiationsModel.find()
+                return res.json({data: negotiations})
             } else {
                 await negotiation.save()
                 await AuctionsModel.findOneAndUpdate({_id: auction?._id}, {Status: "Negotiation"}, {new: true})
             }
         } catch (err) {
-            return res.json({failed: err})
+            const negotiations = await NegotiationsModel.find()
+            return res.json({data: negotiations})
         }
         }    
     }
