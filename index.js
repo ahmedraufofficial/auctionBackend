@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+var apn = require('apn');
 const path = require('path');
 const multer = require('multer');
 const moment = require('moment');
@@ -651,6 +653,38 @@ app.post('/api/createuser', async (req, res) => {
     } catch (err) {
         console.log(err)
     }
+});
+
+app.post('/ios/token', async (req, res) => {
+
+    var options = {
+        token: {
+          key: process.env.KEY_PATH,
+          keyId: process.env.KEY_ID,
+          teamId: process.env.APPLE_TEAM_ID
+        },
+        production: false
+      };
+       
+    var apnProvider = new apn.Provider(options);
+
+    var note = new apn.Notification();
+ 
+    note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+    note.badge = 3;
+    note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
+    note.payload = {'messageFrom': 'Carology'};
+    note.topic = process.env.BUNDLE_ID;
+    
+    apnProvider.send(note, req.body.token).then( (result) => {
+        console.log(result)
+        if (result?.failed.length > 0) {
+            console.log(result.failed[0].response)
+        }
+    });
+
+    apnProvider.shutdown()
+    res.send({status: "Executed"})
 });
 
 app.post('/login', login);
