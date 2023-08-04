@@ -247,6 +247,49 @@ app.get('/negotiations', async (req, res) => {
     }
 });
 
+async function preNeg(){
+    const auctions = await AuctionsModel.find({"Status": "Pre-Negotiation"})
+    for (let i = 0; i < auctions.length; i++) {
+        const auction = auctions[i]
+        if (new Date(moment(auction?.Auction_Start_Date).format("YYYY-MM-DD")+" "+auction?.Auction_Start_Time+":00").getTime() + 60000 * parseInt(auction.Total_Bidding_Duration) <= new Date(new Date().setHours(new Date().getHours() + 4)).getTime()) {
+            const values = {
+                Auction_Id: auction?._id,
+                Auction_Type: auction?.Auction_Type,
+                Vehicle_Id: auction?.Vehicle_Id,
+                Product_Description: auction?.Product_Description,
+                Currency: auction?.Currency,
+                Current_Bid: auction?.Current_Bid,
+                Negotiation_Duration: auction?.Negotiation_Duration,
+                Negotiation_Mode: auction?.Negotiation_Mode,
+                Set_Incremental_Price: auction?.Set_Incremental_Price,
+                Vehicle_Title: auction?.Vehicle_Title,
+                Status: auction?.Status,
+                Bids: auction?.Bids,
+                Images: auction?.Images,
+                Allow_Auction_Sniping: auction?.Allow_Auction_Sniping,
+                Incremental_Time: auction?.Incremental_Time
+            }
+        if (auction?.Negotiation_Mode === "automatic") {
+            values.Buy_Now_Price = auction?.Current_Bid;
+            values.Negotiation_Start_Date = new Date(new Date().setHours(new Date().getHours() + 4));
+            }
+        const negotiation = new NegotiationsModel(values);
+        try {
+            const check = await NegotiationsModel.findOne({"Auction_Id": auction?._id})
+            if (check) {
+                console.log("Auction already exists")
+            } else {
+                await negotiation.save()
+                await AuctionsModel.findOneAndUpdate({_id: auction?._id}, {Status: "Negotiation"}, {new: true})
+                console.log("Auction created")
+            }
+        } catch (err) {
+            console.log(err)
+        }
+        }    
+    }
+};
+
 app.get('/prenegotiations', async (req, res) => {
     const auctions = await AuctionsModel.find({"Status": "Pre-Negotiation"})
     for (let i = 0; i < auctions.length; i++) {
@@ -428,6 +471,7 @@ app.get('/auctions', async (req, res) => {
     try {
         const auctions = await AuctionsModel.find()
         autoBid(auctions)
+        preNeg();
         return res.json({data: auctions})
     } catch (err) {
         console.log(err)
