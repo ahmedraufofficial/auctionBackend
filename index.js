@@ -112,6 +112,7 @@ app.get('/classifieds', async (req, res) => {
 });
 
 app.post('/add/classifieds', async (req, res) => {
+    console.log(req.body)
     const classified = new ClassifiedsModel(req.body.formData);
     try {
         await classified.save();
@@ -122,7 +123,7 @@ app.post('/add/classifieds', async (req, res) => {
 });
 
 app.post('/add/evaluation', async (req, res) => {
-    const evaluation = new EvaluationModel(req.body.values);
+    const evaluation = new EvaluationModel(req.body.formData);
     try {
         await evaluation.save();
         UserModel.findOne({username: req.body.values.username}).then(async user => {
