@@ -112,11 +112,7 @@ app.get('/classifieds', async (req, res) => {
 });
 
 app.post('/add/classifieds', async (req, res) => {
-    if (req.body.formData){
-        const classified = new ClassifiedsModel(req.body.formData);
-    } else {
-        const classified = new ClassifiedsModel(req.body.values);
-    }
+    const classified = new ClassifiedsModel(req.body.formData);
     try {
         await classified.save();
         res.send({status: "200"})
