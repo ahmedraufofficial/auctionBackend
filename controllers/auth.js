@@ -262,4 +262,91 @@ const deleteAccount = async (req, res, next) => {
     };
 };
  
-module.exports = { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate };
+
+const activateAuctions = (req, res, next) => {
+    UserModel.findOne({_id: req.body.id})
+    .then(async user => {
+        if (!user) {
+            return res.status(404).json({message: "user not found"});
+        } else {
+            const update = await UserModel.findOneAndUpdate({_id: req.body.id}, {auction: "active"}, {new: true})
+
+            if (update) {
+                var mailOptions = {
+                    from: 'llc.carology@gmail.com',
+                    to: update.email,
+                    subject: 'Confirm your account',
+                    html: `<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+
+                    <div style="background-color: #007bff; color: #fff; text-align: center; padding: 20px;">
+                        <h1>Thank You for Applying!</h1>
+                    </div>
+                    
+                    <div style="padding: 20px;">
+                        <p>Dear ${update.username},</p>
+                    
+                        <p>We want to express our gratitude for your interest in Carology Auctions and for applying to join our auctions. We're thrilled to have you on board and excited to offer you the opportunity to explore our unique selection of items up for bidding.</p>
+                    
+                        <p>We're delighted to inform you that your application has been accepted! 🎉 You can now access our exclusive auctions and start bidding on a wide range of fantastic vehicles.</p>
+                    
+                        <h3>Getting Started</h3>
+                        <ol>
+                            <li>Re-Log in to your account</li>
+                            <li>Navigate to the "Auctions" section.</li>
+                            <li>Browse through our curated collection and place your bids on vehicles that catch your eye.</li>
+                        </ol>
+                    
+                        <p>We believe you'll enjoy the thrill of the auction process and discover treasures that align with your interests.</p>
+                    
+                        <p>Should you need any assistance or have questions along the way, our dedicated support team is ready to help. You can reach out to us at .</p>
+                    
+                        <p>Once again, thank you for choosing Carology Auctions for your auction experience. We're looking forward to providing you with top-notch service and access to exciting vehicles.</p>
+                    
+                        <p>Warm regards,<br>
+                        Customer Support.<br>
+                        Carology Auctions<br>
+                    </div>
+                    
+                    </body>`
+                  };
+            
+                transporter.sendMail(mailOptions, function(error, info){
+                    if (error) {
+                      console.log(error);
+                    } else {
+                      console.log('Email sent: ' + info.response);
+                    }
+                });
+                return res.send({status: "200"})
+            }
+        };
+    })
+    .catch(err => {
+        console.log('error', err);
+    });
+};
+
+const auctionUser = async (req, res, next) => {
+    UserModel.findOne({username: req.params.username})
+    .then(async user => {
+        if (!user) {
+            return res.status(404).json({message: "user not found"});
+        } else {
+            return res.send({auction: user.auction})
+        };
+    })
+    .catch(err => {
+        console.log('error', err);
+    });
+};
+
+const auctionUserReq = async (req, res, next) => {
+    try {
+        await UserModel.findOneAndUpdate({username: req.body.username}, {auction: "pending"}, {new: true})
+        return res.send({status: "200", response: "Successfull"})
+    } catch(err) {
+        return res.send({status: "500", error: err})
+    };
+};
+
+module.exports = { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate, activateAuctions, auctionUser, auctionUserReq };

@@ -28,7 +28,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate } = require('./controllers/auth.js');
+const { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate, activateAuctions, auctionUser, auctionUserReq } = require('./controllers/auth.js');
 const { pdfier } = require('./controllers/pdfier.js'); 
 const { userNotification, usersNotificationApi, userNotificationApi, userNotificationId, userNotificationUsername } = require('./controllers/notifications.js')
 
@@ -746,6 +746,9 @@ app.post('/broadcast', usersNotificationApi);
 app.post('/p2p', userNotificationApi);
 app.post('/deviceid', userNotificationId);
 app.post('/deviceusername', userNotificationUsername);
+app.get('/accounts/auction/:username', auctionUser);
+app.post('/accounts/auction', activateAuctions);
+app.post('/accounts/auction/request', auctionUserReq);
 
 app.get('/', async (req, res) => {
     try {
