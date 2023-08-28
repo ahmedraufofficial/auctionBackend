@@ -349,4 +349,22 @@ const auctionUserReq = async (req, res, next) => {
     };
 };
 
-module.exports = { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate, activateAuctions, auctionUser, auctionUserReq };
+const auctionUserReqActivate = async (req, res, next) => {
+    try {
+        await UserModel.findOneAndUpdate({username: req.body.username}, {auction: "active"}, {new: true})
+        return res.send({status: "200", response: "Successfull"})
+    } catch(err) {
+        return res.send({status: "500", error: err})
+    };
+};
+
+const auctionUserReqDeactivate = async (req, res, next) => {
+    try {
+        await UserModel.findOneAndUpdate({username: req.body.username}, {auction: "inactive"}, {new: true})
+        return res.send({status: "200", response: "Successfull"})
+    } catch(err) {
+        return res.send({status: "500", error: err})
+    };
+};
+
+module.exports = { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate, activateAuctions, auctionUser, auctionUserReq, auctionUserReqActivate, auctionUserReqDeactivate };
