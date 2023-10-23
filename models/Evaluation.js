@@ -16,6 +16,7 @@ const EvaluationsSchema = new mongoose.Schema({
     Model: String,
     Year: String,
     Engine: String,
+    Trim: String,
     Product_Description: String,
     Price: String,
     Currency: String,

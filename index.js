@@ -123,10 +123,12 @@ app.post('/add/classifieds', async (req, res) => {
 });
 
 app.post('/add/evaluation', async (req, res) => {
+    console.log(req.body)
     const evaluation = new EvaluationModel(req.body.formData);
+    console.log(evaluation)
     try {
         await evaluation.save();
-        UserModel.findOne({username: req.body.values.username}).then(async user => {
+        UserModel.findOne({username: req.body.formData?.username}).then(async user => {
             if (user) {
                 var mailOptions = {
                     from: 'llc.carology@gmail.com',
