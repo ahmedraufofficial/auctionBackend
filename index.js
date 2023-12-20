@@ -41,7 +41,7 @@ const transporter = nodemailer.createTransport({
 const { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate, activateAuctions, auctionUser, auctionUserReq, auctionUserReqActivate, auctionUserReqDeactivate } = require('./controllers/auth.js');
 const { pdfier } = require('./controllers/pdfier.js'); 
 const { userNotification, usersNotificationApi, userNotificationApi, userNotificationId, userNotificationUsername } = require('./controllers/notifications.js');
-const { evaluationEmail, classifiedEmail } = require('./controllers/emailbody.js');
+const { signupEmail, evaluationEmail, classifiedEmail } = require('./controllers/emailbody.js');
 
 app.use(cors());
 app.use(express.json());
