@@ -20,17 +20,28 @@ const NotificationModel = require('./models/Notification');
 const AboutModel = require('./models/About');
 const TocModel = require('./models/Toc');
 const nodemailer = require('nodemailer');
-const transporter = nodemailer.createTransport({
+/* const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: 'llc.carology@gmail.com',
       pass: 'qgxenzpjdnnowipw'
     }
-});
+}); */
+
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAILSERVER,
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.EMAILPASS,
+    },
+  });
 
 const { signup, login, isAuth, contact, accounts, activate, generateOtp, resetPassword, deleteAccount, deactivate, activateAuctions, auctionUser, auctionUserReq, auctionUserReqActivate, auctionUserReqDeactivate } = require('./controllers/auth.js');
 const { pdfier } = require('./controllers/pdfier.js'); 
-const { userNotification, usersNotificationApi, userNotificationApi, userNotificationId, userNotificationUsername } = require('./controllers/notifications.js')
+const { userNotification, usersNotificationApi, userNotificationApi, userNotificationId, userNotificationUsername } = require('./controllers/notifications.js');
+const { evaluationEmail, classifiedEmail } = require('./controllers/emailbody.js');
 
 app.use(cors());
 app.use(express.json());
@@ -116,6 +127,27 @@ app.post('/add/classifieds', async (req, res) => {
     const classified = new ClassifiedsModel(req.body?.values ? req.body?.values : req.body?.formData);
     try {
         await classified.save();
+        UserModel.findOne({username: req.body?.values ? req.body?.values.Username : req.body?.formData.Username}).then(async user => {
+            if (user) {
+                var mailOptions = {
+                    from: process.env.EMAIL,
+                    to: user.email,
+                    subject: 'Your Car Listing is Live on Carologys Active Marketplace!',
+                    html: classifiedEmail(user.username)
+                };
+                transporter.sendMail(mailOptions, function(error, info){
+                    if (error) {
+                      console.log(error);
+                    } else {
+                      console.log('Email sent: ' + info.response);
+                    }
+                });
+            }
+        })
+        .catch(err => {
+            console.log('error', err);
+        });
+
         res.send({status: "200"})
     } catch(err) {
         res.send({status: "500", error: err})
@@ -131,10 +163,10 @@ app.post('/add/evaluation', async (req, res) => {
         UserModel.findOne({username: req.body.formData?.username}).then(async user => {
             if (user) {
                 var mailOptions = {
-                    from: 'llc.carology@gmail.com',
+                    from: process.env.EMAIL,
                     to: user.email,
-                    subject: 'Sending Email using Node.js',
-                    text: 'That was easy!'
+                    subject: 'Your Car Evaluation request is sent to Carology',
+                    html: evaluationEmail(user.username)
                 };
                 transporter.sendMail(mailOptions, function(error, info){
                     if (error) {
@@ -732,6 +764,25 @@ app.post('/ios/token', async (req, res) => {
 
     apnProvider.shutdown()
     res.send({status: "Executed"})
+});
+
+
+app.post('/test', async (req, res) => {
+    var mailOptions = {
+        from: 'support@carologyauctions.com',
+        to: "ahmedraufkh@outlook.com",
+        subject: 'Sending Email using Node.js',
+        html: signupEmail("Ahmed Rauf")
+    }
+    transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+            console.log(error);
+            res.send("Erro")
+        } else {
+            console.log('Email sent: ' + info.response);
+            res.send("Success")
+        }
+    });
 });
 
 app.post('/login', login);

@@ -4,14 +4,26 @@ const UserModel = require('../models/Users');
 const nodemailer = require('nodemailer');
 const math = require("mathjs")
 const { userNotification } = require('./notifications.js')
+const { signupEmail, activateEmail, otpEmail, activateAuctionEmail } = require('./emailbody.js');
 
-const transporter = nodemailer.createTransport({
+/* const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: 'llc.carology@gmail.com',
       pass: 'qgxenzpjdnnowipw'
     }
-});
+}); */
+
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAILSERVER,
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.EMAILPASS,
+    },
+  });
+
 
 const signup = async (req, res, next) => {
     const username = await UserModel.findOne({username: req.body.username.toLowerCase()})
@@ -38,10 +50,10 @@ const signup = async (req, res, next) => {
                     return User.save()
                     .then(() => {
                         var mailOptions = {
-                            from: 'llc.carology@gmail.com',
+                            from: process.env.EMAIL,
                             to: req.body.email,
-                            subject: 'Confirm your account',
-                            text: 'Thank you for signing up. Once verified by our admin, your account will be activated and you will be notified'
+                            subject: 'Welcome to Carology - Await confirmation of your account',
+                            html: signupEmail(req.body.username)
                           };
                     
                         transporter.sendMail(mailOptions, function(error, info){
@@ -155,10 +167,10 @@ const generateOtp = async (req, res, next) => {
         const otp = (math.floor(math.random()*90000) + 10000).toString();
         const account = await UserModel.findOneAndUpdate({email: req.body.email}, {otp: otp}, {new: true})
         var mailOptions = {
-            from: 'llc.carology@gmail.com',
+            from: process.env.EMAIL,
             to: req.body.email,
             subject: 'Carology - OTP',
-            text: `Kindly use this OTP --- ${otp} --- to set new password` 
+            html: otpEmail(account.username, otp) 
         };
         if (account) {
             transporter.sendMail(mailOptions, function(error, info){
@@ -214,10 +226,10 @@ const activate = (req, res, next) => {
 
             if (update) {
                 var mailOptions = {
-                    from: 'llc.carology@gmail.com',
+                    from: process.env.EMAIL,
                     to: update.email,
                     subject: 'Confirm your account',
-                    text: 'Thank you for signing up. Your account has been activated.'
+                    html: activateEmail(update.username)
                   };
             
                 transporter.sendMail(mailOptions, function(error, info){
@@ -273,41 +285,10 @@ const activateAuctions = (req, res, next) => {
 
             if (update) {
                 var mailOptions = {
-                    from: 'llc.carology@gmail.com',
+                    from: process.env.EMAIL,
                     to: update.email,
-                    subject: 'Confirm your account',
-                    html: `<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
-
-                    <div style="background-color: #007bff; color: #fff; text-align: center; padding: 20px;">
-                        <h1>Thank You for Applying!</h1>
-                    </div>
-                    
-                    <div style="padding: 20px;">
-                        <p>Dear ${update.username},</p>
-                    
-                        <p>We want to express our gratitude for your interest in Carology Auctions and for applying to join our auctions. We're thrilled to have you on board and excited to offer you the opportunity to explore our unique selection of items up for bidding.</p>
-                    
-                        <p>We're delighted to inform you that your application has been accepted! 🎉 You can now access our exclusive auctions and start bidding on a wide range of fantastic vehicles.</p>
-                    
-                        <h3>Getting Started</h3>
-                        <ol>
-                            <li>Re-Log in to your account</li>
-                            <li>Navigate to the "Auctions" section.</li>
-                            <li>Browse through our curated collection and place your bids on vehicles that catch your eye.</li>
-                        </ol>
-                    
-                        <p>We believe you'll enjoy the thrill of the auction process and discover treasures that align with your interests.</p>
-                    
-                        <p>Should you need any assistance or have questions along the way, our dedicated support team is ready to help. You can reach out to us at .</p>
-                    
-                        <p>Once again, thank you for choosing Carology Auctions for your auction experience. We're looking forward to providing you with top-notch service and access to exciting vehicles.</p>
-                    
-                        <p>Warm regards,<br>
-                        Customer Support.<br>
-                        Carology Auctions<br>
-                    </div>
-                    
-                    </body>`
+                    subject: 'Get Ready to Bid: Your Auction Access is Now Granted!',
+                    html: activateAuctionEmail(update.username)
                   };
             
                 transporter.sendMail(mailOptions, function(error, info){
